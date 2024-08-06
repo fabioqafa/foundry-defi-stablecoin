@@ -1,3 +1,7 @@
+## Decentralized Stablecoin Smart Contract using Foundry
+
+# Follows the CDP model of MakerDAO
+
 1. Relative Stability: Anchored or Pegged -> $1.00
    1. Chainlink Price feed.
    2. Set a function to exchange ETH & BTC -> $$$
