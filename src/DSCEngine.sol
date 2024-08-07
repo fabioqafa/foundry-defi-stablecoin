@@ -30,6 +30,7 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuar
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { DecentralizedStableCoin } from "../src/DecentralizedStableCoin.sol";
 import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import { OracleLib } from "./libraries/OracleLib.sol";
 
 import { Test, console } from "forge-std/Test.sol";
 
@@ -56,7 +57,7 @@ import { Test, console } from "forge-std/Test.sol";
 //Inherit later the interface `IDSCEngile`
 contract DSCEngine is IDSCEngine, ReentrancyGuard {
     ///////////////////
-    // Errors
+    // Errors       ///
     ///////////////////
     error DSCEngine__TokenAddressesAndPriceFeedAddressesAmountsDontMatch();
     error DSCEngine__NeedsMoreThanZero();
@@ -66,6 +67,11 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
     error DSCEngine__MintFailed();
     error DSCEngine__HealthFactorOk();
     error DSCEngine__HealthFactorNotImproved();
+
+    ///////////////////
+    // Types        ///
+    ///////////////////
+    using OracleLib for AggregatorV3Interface;
 
     ///////////////////
     // State Variables
@@ -342,7 +348,7 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
 
     function _getUsdValue(address token, uint256 amount) private view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[token]);
-        (, int256 price,,,) = priceFeed.latestRoundData();
+        (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
 
         return ((uint256(price) * ADDITIONAL_FEED_PRECISION) * amount) / PRECISION;
     }
@@ -420,11 +426,16 @@ contract DSCEngine is IDSCEngine, ReentrancyGuard {
 
     function getTokenAmountFromUsd(address token, uint256 usdAmountInWei) public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[token]);
-        (, int256 price,,,) = priceFeed.latestRoundData();
+        (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
         return ((usdAmountInWei * PRECISION) / (uint256(price) * ADDITIONAL_FEED_PRECISION));
     }
 
     function getCollateralTokens() external view returns (address[] memory) {
         return s_collateralTokens;
     }
+
+    function getCollateralTokenPriceFeed(address token) external view returns (address) {
+        return s_priceFeeds[token];
+    }
+
 }
