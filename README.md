@@ -1,5 +1,7 @@
 # Decentralized Stablecoin Smart Contract using Foundry
 
+## Smart Contracts in this project are deployed and tested in Anvil
+
 ## Follows the CDP model of MakerDAO
 
 1. Relative Stability: Anchored or Pegged -> $1.00
