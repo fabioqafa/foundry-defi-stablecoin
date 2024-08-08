@@ -16,10 +16,6 @@ contract Handler is Test {
     ERC20Mock weth;
     ERC20Mock wbtc;
 
-    uint256 public timesDepositIsCalled;
-    uint256 public timesMintCalled;
-    uint256 public timesRedeemIsCalled;
-
     address[] public usersWithCollateralDeposited;
 
     uint256 public constant MAX_DEPOSIT_SIZE = type(uint96).max;
@@ -45,8 +41,6 @@ contract Handler is Test {
         dscEngine.depositCollateral(address(collateral), amountCollateral);
 
         vm.stopPrank();
-
-        timesDepositIsCalled++;
         // double push
         usersWithCollateralDeposited.push(msg.sender);
     }
@@ -68,28 +62,29 @@ contract Handler is Test {
         vm.startPrank(sender);
         dscEngine.mintDsc(amountDscToMint);
         vm.stopPrank();
-
-        timesMintCalled++;
     }
 
-    function redeemCollateral(uint256 collateralSeed, uint256 amountCollateral) public {
+    function redeemCollateral(uint256 collateralSeed, uint256 amountCollateral, uint256 addressSeed) public {
+        if(usersWithCollateralDeposited.length == 0) {
+            return;
+        }
+        address sender = usersWithCollateralDeposited[addressSeed % usersWithCollateralDeposited.length];
         ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);      
         //(uint256 totalDscMinted, ) = dscEngine.getAccountInformation(msg.sender);
         //uint256 maxCollateralToRedeem = dscEngine.getUsdValue(address(collateral), dscEngine.getCollateralBalanceOfUser(msg.sender, address(collateral))) - (2 * totalDscMinted);
-        uint256 maxCollateralToRedeem = dscEngine.getCollateralBalanceOfUser(address(collateral), msg.sender);
+        uint256 maxCollateralToRedeem = dscEngine.getCollateralBalanceOfUser(address(collateral), sender);
         amountCollateral = bound(amountCollateral, 0, dscEngine.getTokenAmountFromUsd(address(collateral), maxCollateralToRedeem));
         
         //To check for other bugs, for example the user redeems more collateral than he has
         //remove the maxCollateralToRedeem and `amountCollateral = bound(amountCollateral, 0, MAX_DEPOSIT_SIZE);`
         //Also, put fail_on_revert on foundry.toml to false.
+        
         if (amountCollateral == 0) {
             return;
         }
-        vm.startPrank(msg.sender);
+        vm.startPrank(sender);
         dscEngine.redeemCollateral(address(collateral), amountCollateral);
-        vm.stopPrank();
-
-        timesRedeemIsCalled++;
+        vm.stopPrank();        
     }
 
     // This breaks our invariant test!!!
@@ -98,10 +93,16 @@ contract Handler is Test {
     //     ethUsdPriceFeed.updateAnswer(newPriceInt);
     // }
 
+    function callSummary() external view {
+        console.log("Weth total deposited", weth.balanceOf(address(dscEngine)));
+        console.log("Wbtc total deposited", wbtc.balanceOf(address(dscEngine)));
+        console.log("Total supply of DSC", dsc.totalSupply());
+    }
+
 
     // Helper functions
 
-    function _getCollateralFromSeed(uint256 collateralSeed) private view returns (ERC20Mock) {
+    function _getCollateralFromSeed(uint256 collateralSeed) public view returns (ERC20Mock) {
         if (collateralSeed % 2 == 0) {
             return weth;
         }

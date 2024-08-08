@@ -42,12 +42,6 @@ contract InvariantsTest is StdInvariant, Test {
 
         uint256 wethValue = dscEngine.getUsdValue(weth, totalWethDeposited);
         uint256 wbtcValue = dscEngine.getUsdValue(weth, totalWbtcDeposited);
-        console.log('WETH value in USD: ', wethValue);
-        console.log("WBTC value in USD: ", wbtcValue);
-        console.log("DSC total supply: ", totalSupply);
-        console.log("Times deposit is called: ", handler.timesDepositIsCalled());
-        console.log("Times mint is called: ", handler.timesMintCalled());
-        console.log("Times redeem is called: ", handler.timesRedeemIsCalled());
 
         assert(wethValue + wbtcValue >= totalSupply);
     }
@@ -56,5 +50,24 @@ contract InvariantsTest is StdInvariant, Test {
         dscEngine.getLiquidatorBonus();
         dscEngine.getPrecision();
         dscEngine.getPrecision();
+        dscEngine.getAccountCollateralValue(msg.sender);
+        dscEngine.getAccountInformation(msg.sender);
+        dscEngine.getAdditionalFeedPrecision();
+        dscEngine.getCollateralBalanceOfUser(msg.sender, weth);
+        dscEngine.getCollateralTokenPriceFeed(weth);
+        dscEngine.getCollateralTokens();
+        dscEngine.getDSC();
+        dscEngine.getHealthFactor(msg.sender);
+        dscEngine.getLiquidationPrecision();
+        dscEngine.getLiquidationThreshold();
+        dscEngine.getLiquidatorBonus();
+        dscEngine.getMinHealthFactor();
+        dscEngine.getPrecision();
+        dscEngine.getTokenAmountFromUsd(weth, 1 ether);
+        dscEngine.getUsdValue(weth, 1 ether);
+    }
+
+    function invariant_callSummary() public view {
+        return handler.callSummary();
     }
 }

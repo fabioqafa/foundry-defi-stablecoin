@@ -8,8 +8,8 @@ remappings = [
 ]
 
 [invariant]
-runs = 128            #number of runs
-depth = 128           #number of calls in a single run
+runs = 128             #number of runs
+depth = 128            #number of calls in a single run
 fail_on_revert = false
 
 [fmt]
